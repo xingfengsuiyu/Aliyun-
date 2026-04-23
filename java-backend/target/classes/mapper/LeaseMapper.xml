@@ -1,0 +1,204 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.rental.mapper.LeaseMapper">
+
+    <!-- Result Map -->
+    <resultMap id="LeaseResultMap" type="com.rental.entity.Lease">
+        <id property="id" column="id"/>
+        <result property="landlordId" column="landlord_id"/>
+        <result property="propertyId" column="property_id"/>
+        <result property="tenantId" column="tenant_id"/>
+        <result property="startDate" column="start_date"/>
+        <result property="endDate" column="end_date"/>
+        <result property="rent" column="rent"/>
+        <result property="deposit" column="deposit"/>
+        <result property="paymentMode" column="payment_mode"/>
+        <result property="paymentDay" column="payment_day"/>
+        <result property="includePropertyFee" column="include_property_fee"/>
+        <result property="includeUtility" column="include_utility"/>
+        <result property="otherTerms" column="other_terms"/>
+        <result property="status" column="status"/>
+        <result property="terminationReason" column="termination_reason"/>
+        <result property="actualTerminationDate" column="actual_termination_date"/>
+        <result property="renewedFrom" column="renewed_from"/>
+        <result property="createdAt" column="created_at"/>
+        <result property="updatedAt" column="updated_at"/>
+        <result property="propertyName" column="property_name"/>
+        <result property="propertyAddress" column="property_address"/>
+        <result property="tenantName" column="tenant_name"/>
+
+        <!-- Collection mappings -->
+        <collection property="attachments" ofType="string"
+                    select="findAttachmentsByLeaseId" column="id"/>
+    </resultMap>
+
+    <!-- Result Map for joined query -->
+    <resultMap id="LeaseWithDetailsResultMap" type="com.rental.entity.Lease">
+        <id property="id" column="id"/>
+        <result property="landlordId" column="landlord_id"/>
+        <result property="propertyId" column="property_id"/>
+        <result property="tenantId" column="tenant_id"/>
+        <result property="startDate" column="start_date"/>
+        <result property="endDate" column="end_date"/>
+        <result property="rent" column="rent"/>
+        <result property="deposit" column="deposit"/>
+        <result property="paymentMode" column="payment_mode"/>
+        <result property="paymentDay" column="payment_day"/>
+        <result property="includePropertyFee" column="include_property_fee"/>
+        <result property="includeUtility" column="include_utility"/>
+        <result property="otherTerms" column="other_terms"/>
+        <result property="status" column="status"/>
+        <result property="terminationReason" column="termination_reason"/>
+        <result property="actualTerminationDate" column="actual_termination_date"/>
+        <result property="renewedFrom" column="renewed_from"/>
+        <result property="createdAt" column="created_at"/>
+        <result property="updatedAt" column="updated_at"/>
+        <result property="propertyName" column="property_name"/>
+        <result property="propertyAddress" column="property_address"/>
+        <result property="tenantName" column="tenant_name"/>
+    </resultMap>
+
+    <!-- Find attachments by lease ID -->
+    <select id="findAttachmentsByLeaseId" resultType="string">
+        SELECT attachment_url FROM lease_attachments WHERE lease_id = #{id}
+    </select>
+
+    <!-- Find by ID -->
+    <select id="findById" resultMap="LeaseResultMap">
+        SELECT * FROM leases WHERE id = #{id}
+    </select>
+
+    <!-- Find by ID with property and tenant details -->
+    <select id="findByIdWithDetails" resultMap="LeaseWithDetailsResultMap">
+        SELECT l.*, p.name as property_name, p.address as property_address, t.name as tenant_name
+        FROM leases l
+        LEFT JOIN properties p ON l.property_id = p.id
+        LEFT JOIN tenants t ON l.tenant_id = t.id
+        WHERE l.id = #{id}
+    </select>
+
+    <!-- Insert lease -->
+    <insert id="insert" parameterType="com.rental.entity.Lease">
+        INSERT INTO leases(
+            id, landlord_id, property_id, tenant_id, start_date, end_date,
+            rent, deposit, payment_mode, payment_day, include_property_fee, include_utility,
+            other_terms, status, created_at, updated_at
+        ) VALUES(
+            #{id}, #{landlordId}, #{propertyId}, #{tenantId}, #{startDate}, #{endDate},
+            #{rent}, #{deposit}, #{paymentMode}, #{paymentDay}, #{includePropertyFee},
+            #{includeUtility}, #{otherTerms}, #{status}, NOW(), NOW()
+        )
+    </insert>
+
+    <!-- Insert attachment -->
+    <insert id="insertAttachment">
+        INSERT INTO lease_attachments(lease_id, attachment_url)
+        VALUES(#{leaseId}, #{attachmentUrl})
+    </insert>
+
+    <!-- Update lease -->
+    <update id="update" parameterType="com.rental.entity.Lease">
+        UPDATE leases SET
+            start_date = #{startDate},
+            end_date = #{endDate},
+            rent = #{rent},
+            deposit = #{deposit},
+            payment_mode = #{paymentMode},
+            payment_day = #{paymentDay},
+            include_property_fee = #{includePropertyFee},
+            include_utility = #{includeUtility},
+            other_terms = #{otherTerms},
+            status = #{status},
+            termination_reason = #{terminationReason},
+            actual_termination_date = #{actualTerminationDate},
+            renewed_from = #{renewedFrom},
+            updated_at = NOW()
+        WHERE id = #{id}
+    </update>
+
+    <!-- Find by landlord ID -->
+    <select id="findByLandlordId" resultMap="LeaseResultMap">
+        SELECT * FROM leases
+        WHERE landlord_id = #{landlordId}
+        ORDER BY created_at DESC
+    </select>
+
+    <!-- Find by landlord ID with property and tenant details -->
+    <select id="findByLandlordIdWithDetails" resultMap="LeaseWithDetailsResultMap">
+        SELECT l.*, p.name as property_name, p.address as property_address, t.name as tenant_name
+        FROM leases l
+        LEFT JOIN properties p ON l.property_id = p.id
+        LEFT JOIN tenants t ON l.tenant_id = t.id
+        WHERE l.landlord_id = #{landlordId}
+        ORDER BY l.created_at DESC
+    </select>
+
+    <!-- Search leases with dynamic conditions -->
+    <select id="searchLeases" resultMap="LeaseResultMap">
+        SELECT * FROM leases
+        WHERE landlord_id = #{landlordId}
+        <if test="status != null and status != ''">
+            AND status = #{status}
+        </if>
+        <if test="tenantId != null and tenantId != ''">
+            AND tenant_id = #{tenantId}
+        </if>
+        <if test="propertyId != null and propertyId != ''">
+            AND property_id = #{propertyId}
+        </if>
+        ORDER BY created_at DESC
+    </select>
+
+    <!-- Search leases with property and tenant details -->
+    <select id="searchLeasesWithDetails" resultMap="LeaseWithDetailsResultMap">
+        SELECT l.*, p.name as property_name, p.address as property_address, t.name as tenant_name
+        FROM leases l
+        LEFT JOIN properties p ON l.property_id = p.id
+        LEFT JOIN tenants t ON l.tenant_id = t.id
+        WHERE l.landlord_id = #{landlordId}
+        <if test="status != null and status != ''">
+            AND l.status = #{status}
+        </if>
+        <if test="tenantId != null and tenantId != ''">
+            AND l.tenant_id = #{tenantId}
+        </if>
+        <if test="propertyId != null and propertyId != ''">
+            AND l.property_id = #{propertyId}
+        </if>
+        ORDER BY l.created_at DESC
+    </select>
+
+    <!-- Find by landlord ID and status -->
+    <select id="findByLandlordIdAndStatus" resultMap="LeaseResultMap">
+        SELECT * FROM leases
+        WHERE landlord_id = #{landlordId} AND status = #{status}
+    </select>
+
+    <!-- Find expiring leases with details -->
+    <select id="findExpiringLeases" resultMap="LeaseWithDetailsResultMap">
+        SELECT l.*, p.name as property_name, p.address as property_address, t.name as tenant_name
+        FROM leases l
+        LEFT JOIN properties p ON l.property_id = p.id
+        LEFT JOIN tenants t ON l.tenant_id = t.id
+        WHERE l.landlord_id = #{landlordId}
+          AND l.status = '生效中'
+          AND l.end_date &lt;= #{date}
+    </select>
+
+    <!-- Count by landlord ID and status -->
+    <select id="countByLandlordIdAndStatus" resultType="long">
+        SELECT COUNT(*) FROM leases
+        WHERE landlord_id = #{landlordId} AND status = #{status}
+    </select>
+
+    <!-- Find all active leases -->
+    <select id="findAllActiveLeases" resultMap="LeaseWithDetailsResultMap">
+        SELECT l.*, p.name as property_name, p.address as property_address, t.name as tenant_name
+        FROM leases l
+        LEFT JOIN properties p ON l.property_id = p.id
+        LEFT JOIN tenants t ON l.tenant_id = t.id
+        WHERE l.status = '生效中'
+    </select>
+
+</mapper>

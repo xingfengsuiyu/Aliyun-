@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.rental.mapper.VerificationCodeMapper">
+
+    <resultMap id="VerificationCodeResultMap" type="com.rental.entity.VerificationCode">
+        <id property="id" column="id"/>
+        <result property="email" column="email"/>
+        <result property="code" column="code"/>
+        <result property="type" column="type"/>
+        <result property="used" column="used"/>
+        <result property="expiresAt" column="expires_at"/>
+        <result property="createdAt" column="created_at"/>
+    </resultMap>
+
+    <insert id="insert" parameterType="com.rental.entity.VerificationCode">
+        INSERT INTO verification_codes(
+            id, email, code, type, used, expires_at, created_at
+        ) VALUES(
+            #{id}, #{email}, #{code}, #{type}, #{used}, #{expiresAt}, NOW()
+        )
+    </insert>
+
+    <select id="findByEmailAndType" resultMap="VerificationCodeResultMap">
+        SELECT * FROM verification_codes
+        WHERE email = #{email}
+          AND type = #{type}
+          AND used = #{used}
+          AND expires_at > NOW()
+        ORDER BY created_at DESC
+        LIMIT 1
+    </select>
+
+    <update id="markAsUsed">
+        UPDATE verification_codes SET used = true WHERE id = #{id}
+    </update>
+
+    <delete id="deleteExpired">
+        DELETE FROM verification_codes WHERE expires_at &lt; NOW()
+    </delete>
+
+</mapper>

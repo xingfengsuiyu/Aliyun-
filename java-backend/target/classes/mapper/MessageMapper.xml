@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.rental.mapper.MessageMapper">
+
+    <!-- Result Map -->
+    <resultMap id="MessageResultMap" type="com.rental.entity.Message">
+        <id property="id" column="id"/>
+        <result property="landlordId" column="landlord_id"/>
+        <result property="tenantId" column="tenant_id"/>
+        <result property="sender" column="sender"/>
+        <result property="content" column="content"/>
+        <result property="messageType" column="message_type"/>
+        <result property="attachmentUrl" column="attachment_url"/>
+        <result property="isRead" column="is_read"/>
+        <result property="createdAt" column="created_at"/>
+    </resultMap>
+
+    <!-- Find by ID -->
+    <select id="findById" resultMap="MessageResultMap">
+        SELECT * FROM messages WHERE id = #{id}
+    </select>
+
+    <!-- Insert message -->
+    <insert id="insert" parameterType="com.rental.entity.Message">
+        INSERT INTO messages(
+            id, landlord_id, tenant_id, sender, content, message_type,
+            attachment_url, is_read, created_at
+        ) VALUES(
+            #{id}, #{landlordId}, #{tenantId}, #{sender}, #{content}, #{messageType},
+            #{attachmentUrl}, #{isRead}, NOW()
+        )
+    </insert>
+
+    <!-- Update message -->
+    <update id="update" parameterType="com.rental.entity.Message">
+        UPDATE messages SET
+            is_read = #{isRead}
+        WHERE id = #{id}
+    </update>
+
+    <!-- Find by landlord ID and tenant ID -->
+    <select id="findByLandlordIdAndTenantId" resultMap="MessageResultMap">
+        SELECT * FROM messages 
+        WHERE landlord_id = #{landlordId} AND tenant_id = #{tenantId}
+        ORDER BY created_at DESC
+    </select>
+
+    <!-- Find by landlord ID -->
+    <select id="findByLandlordId" resultMap="MessageResultMap">
+        SELECT * FROM messages 
+        WHERE landlord_id = #{landlordId}
+        ORDER BY created_at DESC
+    </select>
+
+    <!-- Find by tenant ID -->
+    <select id="findByTenantId" resultMap="MessageResultMap">
+        SELECT * FROM messages 
+        WHERE tenant_id = #{tenantId}
+        ORDER BY created_at DESC
+    </select>
+
+    <!-- Count unread messages -->
+    <select id="countUnreadMessages" resultType="long">
+        SELECT COUNT(*) FROM messages 
+        WHERE landlord_id = #{landlordId} AND tenant_id = #{tenantId}
+        AND is_read = FALSE AND sender = '租客'
+    </select>
+
+    <!-- Mark all as read -->
+    <update id="markAllAsRead">
+        UPDATE messages SET is_read = TRUE 
+        WHERE landlord_id = #{landlordId} AND tenant_id = #{tenantId}
+    </update>
+
+</mapper>

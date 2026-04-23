@@ -1,0 +1,163 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.rental.mapper.PropertyMapper">
+
+    <!-- Result Map -->
+    <resultMap id="PropertyResultMap" type="com.rental.entity.Property">
+        <id property="id" column="id"/>
+        <result property="landlordId" column="landlord_id"/>
+        <result property="name" column="name"/>
+        <result property="address" column="address"/>
+        <result property="propertyType" column="property_type"/>
+        <result property="layout" column="layout"/>
+        <result property="description" column="description"/>
+        <result property="area" column="area"/>
+        <result property="decoration" column="decoration"/>
+        <result property="orientation" column="orientation"/>
+        <result property="totalFloors" column="total_floors"/>
+        <result property="currentFloor" column="current_floor"/>
+        <result property="floor" column="floor"/>
+        <result property="roomNumber" column="room_number"/>
+        <result property="rent" column="rent"/>
+        <result property="deposit" column="deposit"/>
+        <result property="depositMode" column="deposit_mode"/>
+        <result property="availableFrom" column="available_from"/>
+        <result property="minLeaseTerm" column="min_lease_term"/>
+        <result property="allowPets" column="allow_pets"/>
+        <result property="allowSublet" column="allow_sublet"/>
+        <result property="status" column="status"/>
+        <result property="maintenanceReason" column="maintenance_reason"/>
+        <result property="expectedAvailableDate" column="expected_available_date"/>
+        <result property="createdAt" column="created_at"/>
+        <result property="updatedAt" column="updated_at"/>
+        
+        <!-- Collection mappings -->
+        <collection property="facilities" ofType="string"
+                    select="findFacilitiesByPropertyId" column="id"/>
+        <collection property="images" ofType="string"
+                    select="findImagesByPropertyId" column="id"/>
+    </resultMap>
+
+    <!-- Find facilities by property ID -->
+    <select id="findFacilitiesByPropertyId" resultType="string">
+        SELECT facility FROM property_facilities WHERE property_id = #{id}
+    </select>
+
+    <!-- Find images by property ID -->
+    <select id="findImagesByPropertyId" resultType="string">
+        SELECT image_url FROM property_images WHERE property_id = #{id}
+    </select>
+
+    <!-- Find by ID -->
+    <select id="findById" resultMap="PropertyResultMap">
+        SELECT * FROM properties WHERE id = #{id}
+    </select>
+
+    <!-- Insert property -->
+    <insert id="insert" parameterType="com.rental.entity.Property">
+        INSERT INTO properties(
+            id, landlord_id, name, address, property_type, layout, description, area,
+            decoration, orientation, total_floors, current_floor, floor, room_number, rent,
+            deposit, deposit_mode, available_from, min_lease_term,
+            allow_pets, allow_sublet, status, created_at, updated_at
+        ) VALUES(
+            #{id}, #{landlordId}, #{name}, #{address}, #{propertyType},
+            #{layout}, #{description}, #{area}, #{decoration}, #{orientation},
+            #{totalFloors}, #{currentFloor}, #{floor}, #{roomNumber}, #{rent}, #{deposit},
+            #{depositMode}, #{availableFrom}, #{minLeaseTerm},
+            #{allowPets}, #{allowSublet}, #{status}, NOW(), NOW()
+        )
+    </insert>
+
+    <!-- Insert facility -->
+    <insert id="insertFacility">
+        INSERT INTO property_facilities(property_id, facility) 
+        VALUES(#{propertyId}, #{facility})
+    </insert>
+
+    <!-- Insert image -->
+    <insert id="insertImage">
+        INSERT INTO property_images(property_id, image_url) 
+        VALUES(#{propertyId}, #{imageUrl})
+    </insert>
+
+    <!-- Update property -->
+    <update id="update" parameterType="com.rental.entity.Property">
+        UPDATE properties SET
+            name = #{name},
+            address = #{address},
+            property_type = #{propertyType},
+            layout = #{layout},
+            description = #{description},
+            area = #{area},
+            decoration = #{decoration},
+            orientation = #{orientation},
+            total_floors = #{totalFloors},
+            current_floor = #{currentFloor},
+            floor = #{floor},
+            room_number = #{roomNumber},
+            rent = #{rent},
+            deposit = #{deposit},
+            deposit_mode = #{depositMode},
+            available_from = #{availableFrom},
+            min_lease_term = #{minLeaseTerm},
+            allow_pets = #{allowPets},
+            allow_sublet = #{allowSublet},
+            status = #{status},
+            maintenance_reason = #{maintenanceReason},
+            expected_available_date = #{expectedAvailableDate},
+            updated_at = NOW()
+        WHERE id = #{id}
+    </update>
+
+    <!-- Delete facilities -->
+    <delete id="deleteFacilities">
+        DELETE FROM property_facilities WHERE property_id = #{propertyId}
+    </delete>
+
+    <!-- Delete images -->
+    <delete id="deleteImages">
+        DELETE FROM property_images WHERE property_id = #{propertyId}
+    </delete>
+
+    <!-- Delete property -->
+    <delete id="delete">
+        DELETE FROM properties WHERE id = #{id}
+    </delete>
+
+    <!-- Find by landlord ID -->
+    <select id="findByLandlordId" resultMap="PropertyResultMap">
+        SELECT * FROM properties 
+        WHERE landlord_id = #{landlordId}
+        ORDER BY created_at DESC
+    </select>
+
+    <!-- Search properties with dynamic conditions -->
+    <select id="searchProperties" resultMap="PropertyResultMap">
+        SELECT * FROM properties 
+        WHERE landlord_id = #{landlordId}
+        <if test="name != null and name != ''">
+            AND name LIKE CONCAT('%', #{name}, '%')
+        </if>
+        <if test="status != null">
+            AND status = #{status}
+        </if>
+        <if test="propertyType != null">
+            AND property_type = #{propertyType}
+        </if>
+        ORDER BY created_at DESC
+    </select>
+
+    <!-- Count by landlord ID -->
+    <select id="countByLandlordId" resultType="long">
+        SELECT COUNT(*) FROM properties WHERE landlord_id = #{landlordId}
+    </select>
+
+    <!-- Count by landlord ID and status -->
+    <select id="countByLandlordIdAndStatus" resultType="long">
+        SELECT COUNT(*) FROM properties 
+        WHERE landlord_id = #{landlordId} AND status = #{status}
+    </select>
+
+</mapper>

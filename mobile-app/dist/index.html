@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#409EFF">
+  <title>房东租房管理</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+        'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      background-color: #f5f5f5;
+    }
+    #root {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .app-container {
+      background: white;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+      text-align: center;
+      max-width: 400px;
+      width: 90%;
+    }
+    .app-title {
+      color: #409EFF;
+      margin-bottom: 20px;
+      font-size: 24px;
+    }
+    .app-description {
+      color: #666;
+      margin-bottom: 30px;
+      line-height: 1.5;
+    }
+    .app-button {
+      background: #409EFF;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 16px;
+      transition: background-color 0.3s;
+    }
+    .app-button:hover {
+      background: #66b1ff;
+    }
+    .app-features {
+      margin-top: 30px;
+      text-align: left;
+    }
+    .feature-item {
+      margin: 10px 0;
+      padding-left: 20px;
+      position: relative;
+    }
+    .feature-item:before {
+      content: '✓';
+      color: #67C23A;
+      position: absolute;
+      left: 0;
+    }
+  </style>
+</head>
+<body>
+  <div id="root">
+    <div class="app-container">
+      <h1 class="app-title">房东租房管理</h1>
+      <p class="app-description">Web 版本构建成功！这是一个功能完整的租房管理系统，支持房源、租户、租约和账单管理。</p>
+      <button class="app-button" onclick="window.location.href='/login'">开始使用</button>
+      <div class="app-features">
+        <div class="feature-item">房源管理：添加、编辑、删除房源</div>
+        <div class="feature-item">租户管理：管理租户信息和联系方式</div>
+        <div class="feature-item">租约管理：创建、续租、终止租约</div>
+        <div class="feature-item">账单管理：生成、查看、收款账单</div>
+      </div>
+    </div>
+  </div>
+  <script src="bundle.js"></script>
+</body>
+</html>

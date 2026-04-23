@@ -1,0 +1,15 @@
+server:
+  port: 8081
+
+spring:
+  application:
+    name: admin-server
+
+boot:
+  admin:
+    ui:
+      title: 租房管理系统监控中心
+
+logging:
+  level:
+    de.codecentric: DEBUG

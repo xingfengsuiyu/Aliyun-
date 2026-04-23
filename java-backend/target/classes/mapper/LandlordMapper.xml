@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.rental.mapper.LandlordMapper">
+
+    <!-- Result Map -->
+    <resultMap id="LandlordResultMap" type="com.rental.entity.Landlord">
+        <id property="id" column="id"/>
+        <result property="account" column="account"/>
+        <result property="password" column="password"/>
+        <result property="name" column="name"/>
+        <result property="phone" column="phone"/>
+        <result property="email" column="email"/>
+        <result property="status" column="status"/>
+        <result property="failedLoginAttempts" column="login_fail_count"/>
+        <result property="lockedUntil" column="locked_until"/>
+        <result property="lastLoginAt" column="last_login_at"/>
+        <result property="createdAt" column="created_at"/>
+        <result property="updatedAt" column="updated_at"/>
+    </resultMap>
+
+    <!-- Find by ID -->
+    <select id="findById" resultMap="LandlordResultMap">
+        SELECT * FROM landlords WHERE id = #{id}
+    </select>
+
+    <!-- Find by account -->
+    <select id="findByAccount" resultMap="LandlordResultMap">
+        SELECT * FROM landlords WHERE account = #{account}
+    </select>
+
+    <!-- Find by phone -->
+    <select id="findByPhone" resultMap="LandlordResultMap">
+        SELECT * FROM landlords WHERE phone = #{phone}
+    </select>
+
+    <!-- Find by email -->
+    <select id="findByEmail" resultMap="LandlordResultMap">
+        SELECT * FROM landlords WHERE email = #{email}
+    </select>
+
+    <!-- Insert new landlord -->
+    <insert id="insert" parameterType="com.rental.entity.Landlord">
+        INSERT INTO landlords(
+            id, account, password, name, phone, email, status, login_fail_count,
+            locked_until, last_login_at, created_at, updated_at
+        ) VALUES(
+            #{id}, #{account}, #{password}, #{name}, #{phone}, #{email}, #{status}, #{failedLoginAttempts},
+            #{lockedUntil}, #{lastLoginAt}, NOW(), NOW()
+        )
+    </insert>
+
+    <!-- Update landlord -->
+    <update id="update" parameterType="com.rental.entity.Landlord">
+        UPDATE landlords SET
+            name = #{name},
+            phone = #{phone},
+            email = #{email},
+            login_fail_count = #{failedLoginAttempts},
+            locked_until = #{lockedUntil},
+            last_login_at = #{lastLoginAt},
+            updated_at = NOW()
+        WHERE id = #{id}
+    </update>
+
+    <!-- Update password -->
+    <update id="updatePassword">
+        UPDATE landlords SET
+            password = #{password},
+            login_fail_count = 0,
+            locked_until = NULL,
+            updated_at = NOW()
+        WHERE id = #{id}
+    </update>
+
+</mapper>

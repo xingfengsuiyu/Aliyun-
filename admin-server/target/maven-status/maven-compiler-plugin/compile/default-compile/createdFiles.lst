@@ -1,0 +1,3 @@
+com\rental\admin\config\SecurityConfig.class
+com\rental\admin\controller\TaskController.class
+com\rental\admin\AdminServerApplication.class

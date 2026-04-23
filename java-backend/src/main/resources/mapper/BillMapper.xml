@@ -1,0 +1,230 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.rental.mapper.BillMapper">
+
+    <resultMap id="BillResultMap" type="com.rental.entity.Bill">
+        <id property="id" column="id"/>
+        <result property="landlordId" column="landlord_id"/>
+        <result property="leaseId" column="lease_id"/>
+        <result property="propertyId" column="property_id"/>
+        <result property="tenantId" column="tenant_id"/>
+        <result property="billType" column="bill_type"/>
+        <result property="amount" column="amount"/>
+        <result property="dueDate" column="due_date"/>
+        <result property="paidAmount" column="paid_amount"/>
+        <result property="paidDate" column="paid_date"/>
+        <result property="paymentMethod" column="payment_method"/>
+        <result property="paymentReceipt" column="payment_receipt"/>
+        <result property="status" column="status"/>
+        <result property="overdueDays" column="overdue_days"/>
+        <result property="overdueFee" column="overdue_fee"/>
+        <result property="remark" column="remark"/>
+        <result property="createdAt" column="created_at"/>
+        <result property="updatedAt" column="updated_at"/>
+        <result property="propertyName" column="property_name"/>
+        <result property="propertyAddress" column="property_address"/>
+        <result property="tenantName" column="tenant_name"/>
+        <result property="leaseStartDate" column="lease_start_date"/>
+        <result property="leaseEndDate" column="lease_end_date"/>
+    </resultMap>
+
+    <!-- Find by ID -->
+    <select id="findById" resultMap="BillResultMap">
+        SELECT b.*,
+               p.name as property_name, p.address as property_address,
+               t.name as tenant_name,
+               l.start_date as lease_start_date, l.end_date as lease_end_date
+        FROM bills b
+        LEFT JOIN leases l ON b.lease_id = l.id
+        LEFT JOIN properties p ON l.property_id = p.id OR b.property_id = p.id
+        LEFT JOIN tenants t ON l.tenant_id = t.id OR b.tenant_id = t.id
+        WHERE b.id = #{id}
+    </select>
+
+    <!-- Insert bill -->
+    <insert id="insert" parameterType="com.rental.entity.Bill">
+        INSERT INTO bills(
+            id, landlord_id, lease_id, property_id, tenant_id, bill_type,
+            amount, due_date, paid_amount, paid_date, payment_method, payment_receipt,
+            status, overdue_days, overdue_fee, remark, created_at, updated_at
+        ) VALUES(
+            #{id}, #{landlordId}, #{leaseId}, #{propertyId}, #{tenantId}, #{billType},
+            #{amount}, #{dueDate}, #{paidAmount}, #{paidDate}, #{paymentMethod},
+            #{paymentReceipt}, #{status}, #{overdueDays}, #{overdueFee}, #{remark}, NOW(), NOW()
+        )
+    </insert>
+
+    <!-- Update bill -->
+    <update id="update" parameterType="com.rental.entity.Bill">
+        UPDATE bills SET
+            amount = #{amount},
+            due_date = #{dueDate},
+            paid_amount = #{paidAmount},
+            paid_date = #{paidDate},
+            payment_method = #{paymentMethod},
+            payment_receipt = #{paymentReceipt},
+            status = #{status},
+            overdue_days = #{overdueDays},
+            overdue_fee = #{overdueFee},
+            remark = #{remark},
+            updated_at = NOW()
+        WHERE id = #{id}
+    </update>
+
+    <!-- Delete bill by ID -->
+    <delete id="deleteById">
+        DELETE FROM bills WHERE id = #{id}
+    </delete>
+
+    <!-- Record payment -->
+    <update id="recordPayment" parameterType="com.rental.entity.Bill">
+        UPDATE bills SET
+            status = #{status},
+            paid_amount = #{paidAmount},
+            paid_date = #{paidDate},
+            payment_method = #{paymentMethod},
+            payment_receipt = #{paymentReceipt},
+            remark = #{remark},
+            updated_at = NOW()
+        WHERE id = #{id}
+    </update>
+
+    <!-- Find by landlord ID with details -->
+    <select id="findByLandlordId" resultMap="BillResultMap">
+        SELECT b.*,
+               p.name as property_name, p.address as property_address,
+               t.name as tenant_name,
+               l.start_date as lease_start_date, l.end_date as lease_end_date
+        FROM bills b
+        LEFT JOIN leases l ON b.lease_id = l.id
+        LEFT JOIN properties p ON l.property_id = p.id OR b.property_id = p.id
+        LEFT JOIN tenants t ON l.tenant_id = t.id OR b.tenant_id = t.id
+        WHERE b.landlord_id = #{landlordId}
+        ORDER BY b.due_date DESC
+    </select>
+
+    <!-- Search bills with dynamic conditions -->
+    <select id="searchBills" resultMap="BillResultMap">
+        SELECT b.*,
+               p.name as property_name, p.address as property_address,
+               t.name as tenant_name,
+               l.start_date as lease_start_date, l.end_date as lease_end_date
+        FROM bills b
+        LEFT JOIN leases l ON b.lease_id = l.id
+        LEFT JOIN properties p ON l.property_id = p.id OR b.property_id = p.id
+        LEFT JOIN tenants t ON l.tenant_id = t.id OR b.tenant_id = t.id
+        WHERE b.landlord_id = #{landlordId}
+        <if test="status != null and status != ''">
+            AND b.status = #{status}
+        </if>
+        <if test="billType != null and billType != ''">
+            AND b.bill_type = #{billType}
+        </if>
+        <if test="tenantId != null and tenantId != ''">
+            AND (l.tenant_id = #{tenantId} OR b.tenant_id = #{tenantId})
+        </if>
+        <if test="leaseId != null and leaseId != ''">
+            AND b.lease_id = #{leaseId}
+        </if>
+        ORDER BY b.due_date DESC
+    </select>
+
+    <!-- Find overdue bills -->
+    <select id="findOverdueBills" resultMap="BillResultMap">
+        SELECT b.*,
+               p.name as property_name, p.address as property_address,
+               t.name as tenant_name,
+               l.start_date as lease_start_date, l.end_date as lease_end_date
+        FROM bills b
+        LEFT JOIN leases l ON b.lease_id = l.id
+        LEFT JOIN properties p ON l.property_id = p.id OR b.property_id = p.id
+        LEFT JOIN tenants t ON l.tenant_id = t.id OR b.tenant_id = t.id
+        WHERE b.status = '待支付' AND b.due_date &lt; #{today}
+    </select>
+
+    <!-- Find by lease ID -->
+    <select id="findByLeaseId" resultMap="BillResultMap">
+        SELECT b.*,
+               p.name as property_name, p.address as property_address,
+               t.name as tenant_name,
+               l.start_date as lease_start_date, l.end_date as lease_end_date
+        FROM bills b
+        LEFT JOIN leases l ON b.lease_id = l.id
+        LEFT JOIN properties p ON l.property_id = p.id OR b.property_id = p.id
+        LEFT JOIN tenants t ON l.tenant_id = t.id OR b.tenant_id = t.id
+        WHERE b.lease_id = #{leaseId}
+        ORDER BY b.due_date ASC
+    </select>
+
+    <!-- Find by tenant ID -->
+    <select id="findByTenantId" resultMap="BillResultMap">
+        SELECT b.*,
+               p.name as property_name, p.address as property_address,
+               t.name as tenant_name,
+               l.start_date as lease_start_date, l.end_date as lease_end_date
+        FROM bills b
+        LEFT JOIN leases l ON b.lease_id = l.id
+        LEFT JOIN properties p ON l.property_id = p.id OR b.property_id = p.id
+        LEFT JOIN tenants t ON l.tenant_id = t.id OR b.tenant_id = t.id
+        WHERE l.tenant_id = #{tenantId} OR b.tenant_id = #{tenantId}
+        ORDER BY b.due_date ASC
+    </select>
+
+    <!-- Sum paid amount by landlord ID -->
+    <select id="sumPaidAmountByLandlordId" resultType="java.math.BigDecimal">
+        SELECT COALESCE(SUM(paid_amount), 0) FROM bills
+        WHERE landlord_id = #{landlordId} AND status = '已支付'
+    </select>
+
+    <!-- Sum pending amount by landlord ID -->
+    <select id="sumPendingAmountByLandlordId" resultType="java.math.BigDecimal">
+        SELECT COALESCE(SUM(amount), 0) FROM bills
+        WHERE landlord_id = #{landlordId} AND status = '待支付'
+    </select>
+
+    <!-- Count by landlord ID and status -->
+    <select id="countByLandlordIdAndStatus" resultType="long">
+        SELECT COUNT(*) FROM bills
+        WHERE landlord_id = #{landlordId} AND status = #{status}
+    </select>
+
+    <!-- Sum paid amount by landlord ID and month -->
+    <select id="sumPaidAmountByLandlordIdAndMonth" resultType="java.math.BigDecimal">
+        SELECT COALESCE(SUM(paid_amount), 0) FROM bills
+        WHERE landlord_id = #{landlordId}
+          AND status = '已支付'
+          AND YEAR(paid_date) = #{year}
+          AND MONTH(paid_date) = #{month}
+    </select>
+
+    <!-- Find pending bills -->
+    <select id="findPendingBills" resultMap="BillResultMap">
+        SELECT b.*,
+               p.name as property_name, p.address as property_address,
+               t.name as tenant_name,
+               l.start_date as lease_start_date, l.end_date as lease_end_date
+        FROM bills b
+        LEFT JOIN leases l ON b.lease_id = l.id
+        LEFT JOIN properties p ON l.property_id = p.id OR b.property_id = p.id
+        LEFT JOIN tenants t ON l.tenant_id = t.id OR b.tenant_id = t.id
+        WHERE b.landlord_id = #{landlordId}
+          AND b.status IN ('待支付', '逾期')
+        ORDER BY b.due_date ASC
+        LIMIT 10
+    </select>
+
+    <!-- Check if bill exists for lease and due date -->
+    <select id="existsByLeaseIdAndDueDate" resultType="long">
+        SELECT COUNT(*) FROM bills
+        WHERE lease_id = #{leaseId} AND due_date = #{dueDate}
+    </select>
+
+    <!-- Find all unpaid bills -->
+    <select id="findUnpaidBills" resultMap="BillResultMap">
+        SELECT * FROM bills
+        WHERE status = '待支付'
+        ORDER BY due_date ASC
+    </select>
+
+</mapper>
